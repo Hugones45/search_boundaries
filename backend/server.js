@@ -1,8 +1,7 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000
 
 app.use(cors());
 app.use(express.json());
@@ -49,7 +48,7 @@ app.get('/api/place-details', async (req, res) => {
 app.get('/api/weather/city', async (req, res) => {
     try {
         const { q } = req.query;
-        const response = await fetch(`http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${process.env.WEATHER_KEY}&q=${encodeURIComponent(q)}`);
+        const response = await fetch(`https://dataservice.accuweather.com/locations/v1/cities/search?apikey=${process.env.WEATHER_KEY}&q=${encodeURIComponent(q)}`);
         const data = await response.json();
         res.json(data);
     } catch (error) {
@@ -61,7 +60,7 @@ app.get('/api/weather/city', async (req, res) => {
 app.get('/api/weather/location', async (req, res) => {
     try {
         const { lat, lon } = req.query;
-        const response = await fetch(`http://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${process.env.WEATHER_KEY}&q=${lat},${lon}`);
+        const response = await fetch(`https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${process.env.WEATHER_KEY}&q=${lat},${lon}`);
         const data = await response.json();
         res.json(data);
     } catch (error) {
@@ -73,7 +72,7 @@ app.get('/api/weather/location', async (req, res) => {
 app.get('/api/weather/conditions', async (req, res) => {
     try {
         const { key } = req.query;
-        const response = await fetch(`http://dataservice.accuweather.com/currentconditions/v1/${key}?details=true&apikey=${process.env.WEATHER_KEY}`);
+        const response = await fetch(`https://dataservice.accuweather.com/currentconditions/v1/${key}?details=true&apikey=${process.env.WEATHER_KEY}`);
         const data = await response.json();
         res.json(data);
     } catch (error) {
