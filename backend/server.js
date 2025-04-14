@@ -24,7 +24,7 @@ app.get('/api/arcgis-config', (req, res) => {
 app.get('/api/geocode', async (req, res) => {
     try {
         const { text } = req.query;
-        const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(text)}&limit=1&apiKey=${process.env.GEOAPIFY_KEY}`);
+        const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(text)}&limit=1&apiKey=${process.env.GEO_KEY}`);
         const data = await response.json();
         res.json(data);
     } catch (error) {
@@ -36,7 +36,7 @@ app.get('/api/geocode', async (req, res) => {
 app.get('/api/place-details', async (req, res) => {
     try {
         const { id } = req.query;
-        const response = await fetch(`https://api.geoapify.com/v2/place-details?id=${id}&features=details&apiKey=${process.env.GEOAPIFY_KEY}`);
+        const response = await fetch(`https://api.geoapify.com/v2/place-details?id=${id}&features=details&apiKey=${process.env.GEO_KEY}`);
         const data = await response.json();
         res.json(data);
     } catch (error) {
