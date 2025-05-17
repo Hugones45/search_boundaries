@@ -1,7 +1,9 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+import fetch from 'node-fetch';
+
 const app = express();
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -20,6 +22,7 @@ app.get('/api/arcgis-config', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 // Proxy endpoint for Geoapify
 app.get('/api/geocode', async (req, res) => {
     try {
