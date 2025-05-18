@@ -2,18 +2,55 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+// Enhanced CORS configuration
+const allowedOrigins = [
+    'http://127.0.0.1:5501',
+    'http://localhost:5501',
+    'https://searchboundaries-production.up.railway.app'
+];
 
-// In your backend app.js
+// First CORS layer - middleware
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
+
+// Second CORS layer - manual headers
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    next();
+});
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+});
+
+// Your endpoints with additional CORS headers
 app.get('/api/arcgis-config', (req, res) => {
     try {
         if (!process.env.ESRI_API_KEY) {
             throw new Error('ESRI_API_KEY is not configured');
         }
+        res.header('Access-Control-Allow-Origin', req.headers.origin || allowedOrigins[0]);
         res.json({
             apiKey: process.env.ESRI_API_KEY
         });
@@ -22,6 +59,15 @@ app.get('/api/arcgis-config', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// All other endpoints with the same pattern
+const addCorsHeaders = (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || allowedOrigins[0]);
+    next();
+};
+
+// Apply to all API routes
+app.get('/api/*', addCorsHeaders);
 
 // Proxy endpoint for Geoapify
 app.get('/api/geocode', async (req, res) => {

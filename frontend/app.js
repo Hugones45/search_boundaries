@@ -16,9 +16,39 @@ popupWapper.addEventListener('click', e => {
 });
 
 // Base URL configuration
-const API_BASE_URL = window.location.hostname === 'localhost'
+// Use this for development (localhost)
+const DEV_MODE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Configure API base URL
+const API_BASE_URL = DEV_MODE
     ? 'http://localhost:3000'
     : 'https://searchboundaries-production.up.railway.app';
+
+// Enhanced fetch function with CORS handling
+async function fetchAPI(endpoint, params = {}) {
+    const url = new URL(`${API_BASE_URL}/api/${endpoint}`);
+    Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+    });
+
+    try {
+        const response = await fetch(url, {
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
 
 async function fetchAPI(endpoint, params = {}) {
     const queryString = new URLSearchParams(params).toString();
