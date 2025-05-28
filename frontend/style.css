@@ -1,313 +1,316 @@
+/* Base Styles */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Search Form */
 .the-search-places {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  z-index: 1;
-  display: flex;
-  gap: 10px;
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 4px;
-  max-width: calc(100% - 40px); /* Prevents overflow on small screens */
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    max-width: calc(100% - 40px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-#basemapStyles {
-  position: absolute;
-  right: 20px;
-  top: 80px; 
-  z-index: 1;
-  background-color: white;
-  border-radius: 4px;
-  padding: 10px;
-  width: 200px; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Responsive input field */
 #searchBoundarie {
-  padding: 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 250px; /* Default width */
-  max-width: 100%; /* Ensures it doesn't overflow its container */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  box-sizing: border-box; /* Includes padding in width calculation */
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    width: 250px;
+    max-width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    font-size: 14px;
 }
 
 .the-search-places button {
-  padding: 10px 20px;
-  background-color: #4285f4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: background-color 0.3s;
-  white-space: nowrap; /* Prevents button text from wrapping */
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-size: 14px;
 }
 
 .the-search-places button:hover {
-  background-color: #3367d6;
+    background-color: #3367d6;
+    transform: translateY(-1px);
 }
 
+/* Map View */
 #viewDiv {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
-@media (max-width: 600px) {
-  #basemapStyles {
-    max-width: 200px;
-    width: auto;
-    right: 10px;
-    top: auto;
-    bottom: 20px;
-    z-index: 1 !important;
-
-  }
-}
-
-.esri-popup {
-  z-index: 9999 !important;
-}
-/* Mobile responsiveness */
-@media (max-width: 600px) {
-  .the-search-places {
-    flex-direction: column; /* Stack elements vertically on small screens */
-    width: auto; /* Let it shrink to content */
-    right: 10px;
-    top: 10px;
-  }
-  
-  #searchBoundarie {
-    width: 100%; /* Full width of its container */
-    min-width: 150px; /* Minimum width to remain usable */
-  }
-  
-  #basemapStyles {
-    right: 10px;
-    top: auto;
-    bottom: 20px; /* Move to bottom on mobile */
-    width: 180px; /* Slightly smaller */
-    
-  }
-}
-
+/* About Button */
 .about-pro {
-  position: absolute;
-  top:100px;
-  z-index: 1;
-  display: flex;
-  height: 40px;
-  margin-left: 5px;
-  background-color: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  max-width: calc(100% - 40px); /* Prevents overflow on small screens */
+    position: absolute;
+    top: 100px;
+    left: 19px;
+    z-index: 1;
+    display: flex;
+    height: 40px;
+    background-color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
 }
 
 .about-pro:hover {
-  background-color: #FF6F55;
-  cursor: pointer;
+    background-color: #FF6F55;
+    transform: scale(1.05);
 }
 
+/* Info Popup */
 .popup-wrapper {
-  display: none;
-  background-color: rgba(0, 0, 0, 0.5);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 99;
-  height: 100%;
-  overflow-y: auto; /* Scroll para dispositivos pequenos */
+    display: none;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .popup {
-  font-family: sans-serif;
-  text-align: center;
-  margin: 5% auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  position: relative;
-  animation: fadeIn 0.3s ease-in-out;
-  transform: translate(0, 0);
-  max-height: 90vh; 
-  overflow-y: auto; 
+    font-family: 'Arial', sans-serif;
+    margin: 5% auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: fadeIn 0.3s ease-in-out;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .popup h2 {
-  margin-top: 0;
+    margin-top: 0;
+    color: #333;
 }
 
 .popup p {
-  line-height: 1.5;
-  font-size: 15px;
-  color: #333;
+    line-height: 1.6;
+    font-size: 15px;
+    color: #555;
 }
 
 .popup-close {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  font-size: 20px;
-  font-weight: bold;
-  color: #666;
-  cursor: pointer;
-}
-
-/* Responsivo até 600px */
-@media (max-width: 600px) {
-  .popup {
-    max-width: 90%;
-    padding: 20px;
-  }
-
-  .the-search-places {
-    flex-direction: column;
-    right: 10px;
+    position: absolute;
     top: 10px;
-    gap: 6px;
-  }
-
-  #searchBoundarie {
-    width: 100%;
-    min-width: 150px;
-  }
-
-  #basemapStyles {
-    width: 90%;
-    right: 5%;
-    top: auto;
-    bottom: 80px;
-  }
+    right: 14px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s;
 }
-/* Animação */
+
+.popup-close:hover {
+    color: #333;
+    transform: rotate(90deg);
+}
+
+/* Weather Popup Styles */
+.custom-popup-container {
+    position: absolute;
+    top: 180px;
+    left: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    width: 280px;
+    z-index: 100;
+    font-family: 'Arial', sans-serif;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Day Theme */
+.custom-popup-container.day-theme {
+    background: rgba(255, 248, 225, 0.95);
+    border: 1px solid #FFEBB7;
+    color: #5A4A30;
+    box-shadow: 0 4px 20px rgba(255, 215, 100, 0.3);
+}
+
+/* Night Theme */
+.custom-popup-container.night-theme {
+    background: rgba(30, 33, 58, 0.95);
+    border: 1px solid #3B4167;
+    color: #E6E6E6;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.custom-popup-container h2 {
+    margin: 0 0 15px 0;
+    font-size: 22px;
+    color: inherit;
+    font-weight: 600;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid;
+}
+
+.day-theme h2 {
+    border-color: rgba(255, 200, 50, 0.3);
+    color: #5a4a30;
+}
+
+.night-theme h2 {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.weather-info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.day-theme .weather-info-item {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.night-theme .weather-info-item {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.weather-info-item i {
+    margin-right: 12px;
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.day-time-icon {
+    color: #FF8C00; /* Dark orange for daytime */
+    font-size: 1.1em; /* Slightly larger */
+}
+.night-time-icon {
+    color: #9462b6; /* Indigo for nighttime */
+    font-size: 1.1em; /* Slightly larger */
+}
+
+/* Weather condition icons */
+.weather-sun { 
+    color: #FFD700; /* Gold for sunny weather */
+}
+.weather-moon { 
+    color: #a0a0ff; /* Light blue for clear night */
+}
+.fa-cloud-sun { color: #888888; }
+.fa-cloud-moon { color: #888888; }
+.fa-cloud { color: #a0a0a0; }
+.fa-cloud-rain { color: #6495ED; }
+.fa-snowflake { color: #B0E0E6; }
+.fa-bolt { color: #FFD700; }
+.fa-smog { color: #A9A9A9; }
+.fa-temperature-high { color: #FF4500; }
+.fa-temperature-half { color: #FF8C00; }
+.fa-temperature-low { color: #1E90FF; }
+.fa-tint { color: #1E90FF; }
+.fa-tint.high { color: #4169E1; }
+.fa-tint.medium { color: #6495ED; }
+.fa-tint.low { color: #87CEEB; }
+.fa-location-dot { color: #32CD32; }
+
+.custom-popup-container .popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.day-theme .popup-close {
+    background: rgba(255, 215, 100, 0.3);
+    color: #5A4A30;
+}
+
+.night-theme .popup-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: #E6E6E6;
+}
+
+.popup-close:hover {
+    transform: rotate(90deg);
+}
+
+/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-
-
-/* Responsivo até 400px */
-@media (max-width: 400px) {
-  .popup {
-    width: 75%;
-    padding: 15px;
-  }
-
-  .popup p {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .popup h2 {
-    font-size: 5vw;
-  }
-}
-
-
-
-/* NEST HUB */
-@media (width: 1024px) and (height: 600px) {
-  .popup {
-    width: 75%;
-    padding: 15px;
-  }
-
-  .popup p {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .popup h2 {
-    font-size: 5vw;
-  }
-}
-
-@media (max-width: 639px) {
-  .popup {
-    width: 75%;
-    padding: 15px;
-  }
-
-  .popup p {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .popup h2 {
-    font-size: 5vw;
-  }
-}
-
-@media (min-width: 640px) and (max-width: 767px) {
-  .popup {
-    width: 75%;
-    padding: 15px;
-  }
-
-  .popup p {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .popup h2 {
-    font-size: 5vw;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .popup {
-    width: 75%;
-    padding: 15px;
-  }
-
-  .popup p {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .popup h2 {
-    font-size: 5vw;
-  }
-}
-
+/* Responsive styles */
 @media (max-width: 600px) {
-  #basemapStyles {
-    right: 10px;
-    top: 120px; /* Keep it below the search bar */
-    bottom: auto; /* Reset bottom */
-    z-index: 1 !important;
-    width: 180px;
-  }
+    .the-search-places {
+        flex-direction: column;
+        right: 10px;
+        top: 10px;
+    }
+    
+    #searchBoundarie {
+        width: 100%;
+        min-width: 150px;
+    }
+
+    .custom-popup-container {
+        top: 60px;
+        left: 10px;
+        width: calc(100% - 40px);
+    }
+    
+    .about-pro {
+        top: 70px;
+    }
 }
 
 .geo-tech {
-  border: none;
-  padding: 10px;
-  background-color: #4285f4;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 20px;
-  text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4285f4;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s;
 }
 
 .geo-tech:hover {
-  background-color: #0950c4;
-  cursor: pointer;
+    background-color: #3367d6;
+    transform: translateY(-2px);
 }

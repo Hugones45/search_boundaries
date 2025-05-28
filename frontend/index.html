@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="./earth.png" />
     <link rel="stylesheet" href="./style.css" />
-
-    <!-- Load ArcGIS CSS -->
+    <!-- Font Awesome for weather icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- ArcGIS CSS -->
     <link
       rel="stylesheet"
       href="https://js.arcgis.com/4.28/esri/themes/light/main.css"
     />
-
-    <!-- Load Calcite Components -->
+    <!-- Calcite Components -->
     <script
       type="module"
       src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"
     ></script>
-    <title>City Boundaries & Weather</title>
+    <title>World Boundaries & Weather</title>
   </head>
   <body>
     <div class="popup-wrapper">
       <div class="popup">
-        <div class="popup-close">x</div>
+        <div class="popup-close">×</div>
         <div class="popup-content">
           <h2>Hello!</h2>
           <p>
@@ -45,9 +48,8 @@
             Curious to learn more about technology and geoprocessing?<br />
             Visit my profile and get in touch!
           </p>
-
           <a class="geo-tech" href="https://geo-port-with-app.vercel.app/"
-            >Geo Tech Portifolio</a
+            >Geo Tech Portfolio</a
           >
         </div>
       </div>
@@ -60,137 +62,6 @@
     </form>
     <div class="about-pro" title="About the project">
       <img src="./icon-about.png" alt="" />
-    </div>
-
-    <div id="basemapStyles">
-      <calcite-combobox
-        id="styleCombobox"
-        selection-mode="single"
-        clear-disabled
-      >
-        <calcite-combobox-item
-          value="satellite"
-          text-label="arcgis/satellite"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/navigation"
-          text-label="arcgis/navigation"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/navigation-night"
-          text-label="arcgis/navigation-night"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/streets"
-          text-label="arcgis/streets"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/streets-relief"
-          text-label="arcgis/streets-relief"
-        ></calcite-combobox-item>
-
-        <calcite-combobox-item
-          value="arcgis/streets-night"
-          text-label="arcgis/streets-night"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/outdoor"
-          text-label="arcgis/outdoor"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/imagery"
-          text-label="arcgis/imagery"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/topographic"
-          text-label="arcgis/topographic"
-          selected
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/terrain"
-          text-label="arcgis/terrain"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/oceans"
-          text-label="arcgis/oceans"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/light-gray"
-          text-label="arcgis/light-gray"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/dark-gray"
-          text-label="arcgis/dark-gray"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/human-geography"
-          text-label="arcgis/human-geography"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/human-geography-dark"
-          text-label="arcgis/human-geography-dark"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/charted-territory"
-          text-label="arcgis/charted-territory"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/colored-pencil"
-          text-label="arcgis/colored-pencil"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/nova"
-          text-label="arcgis/nova"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/modern-antique"
-          text-label="arcgis/modern-antique"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/midcentury"
-          text-label="arcgis/midcentury"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="arcgis/newspaper"
-          text-label="arcgis/newspaper"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/standard"
-          text-label="osm/standard"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/standard-relief"
-          text-label="osm/standard-relief"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/navigation"
-          text-label="osm/navigation"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/navigation-dark"
-          text-label="osm/navigation-dark"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/streets"
-          text-label="osm/streets"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/hybrid"
-          text-label="osm/hybrid"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/light-gray"
-          text-label="osm/light-gray"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/dark-gray"
-          text-label="osm/dark-gray"
-        ></calcite-combobox-item>
-        <calcite-combobox-item
-          value="osm/blueprint"
-          text-label="osm/blueprint"
-        ></calcite-combobox-item>
-      </calcite-combobox>
     </div>
 
     <script src="https://js.arcgis.com/4.28/"></script>

@@ -15,16 +15,50 @@ popupWapper.addEventListener('click', e => {
     }
 });
 
-// Base URL configuration
-// Use this for development (localhost)
-const DEV_MODE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Improved weather icon function
+function getWeatherIcon(weatherText, isDayTime) {
+    const weather = weatherText.toLowerCase();
 
-// Configure API base URL
+    if (weather.includes('sunny') || weather.includes('clear')) {
+        return isDayTime ? 'fas fa-sun weather-sun' : 'fas fa-moon weather-moon';
+    } else if (weather.includes('partly cloudy')) {
+        return isDayTime ? 'fas fa-cloud-sun' : 'fas fa-cloud-moon';
+    } else if (weather.includes('cloud')) {
+        return 'fas fa-cloud';
+    } else if (weather.includes('rain')) {
+        return 'fas fa-cloud-rain';
+    } else if (weather.includes('snow')) {
+        return 'fas fa-snowflake';
+    } else if (weather.includes('thunder') || weather.includes('storm')) {
+        return 'fas fa-bolt';
+    } else if (weather.includes('fog') || weather.includes('haze')) {
+        return 'fas fa-smog';
+    }
+    return isDayTime ? 'fas fa-sun weather-sun' : 'fas fa-moon weather-moon';
+}
+
+function getTemperatureIcon(temp) {
+    if (temp === "N/A") return 'fas fa-thermometer';
+    const temperature = parseFloat(temp);
+    if (temperature > 30) return 'fas fa-temperature-high';
+    if (temperature > 20) return 'fas fa-temperature-half';
+    return 'fas fa-temperature-low';
+}
+
+function getHumidityIcon(humidity) {
+    if (humidity === "N/A") return 'fas fa-tint';
+    const level = parseFloat(humidity);
+    if (level > 80) return 'fas fa-tint high';
+    if (level > 50) return 'fas fa-tint medium';
+    return 'fas fa-tint low';
+}
+
+// Base URL configuration
+const DEV_MODE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_BASE_URL = DEV_MODE
     ? 'http://localhost:3000'
     : 'https://searchboundaries-production.up.railway.app';
 
-// Enhanced fetch function with CORS handling
 async function fetchAPI(endpoint, params = {}) {
     const url = new URL(`${API_BASE_URL}/api/${endpoint}`);
     Object.entries(params).forEach(([key, value]) => {
@@ -50,18 +84,9 @@ async function fetchAPI(endpoint, params = {}) {
     }
 }
 
-async function fetchAPI(endpoint, params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/api/${endpoint}?${queryString}`);
-    if (!response.ok) {
-        const error = await response.text();
-        console.error('API Error:', error);
-        throw new Error(error);
-    }
-    return response.json();
-}
-
 let view;
+let currentPopupContainer = null;
+let popupInfo = null;
 
 async function loadArcGISConfig() {
     try {
@@ -69,8 +94,7 @@ async function loadArcGISConfig() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const config = await response.json();
-        return config.apiKey;
+        return (await response.json()).apiKey;
     } catch (error) {
         console.error('Failed to load ArcGIS config:', error);
         throw error;
@@ -81,7 +105,6 @@ async function initMap() {
     try {
         const apiKey = await loadArcGISConfig();
 
-        // Configure the ArcGIS API before loading other modules
         await new Promise((resolve) => {
             require(["esri/config"], (esriConfig) => {
                 esriConfig.apiKey = apiKey;
@@ -89,24 +112,18 @@ async function initMap() {
             });
         });
 
-        // Now load the rest of the ArcGIS modules
         require([
             "esri/Map",
             "esri/views/MapView",
             "esri/Graphic",
             "esri/layers/GraphicsLayer",
             "esri/geometry/Extent",
-            "esri/geometry/support/webMercatorUtils"
-        ], (Map, MapView, Graphic, GraphicsLayer, Extent, webMercatorUtils) => {
+            "esri/geometry/support/webMercatorUtils",
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/Expand"
+        ], (Map, MapView, Graphic, GraphicsLayer, Extent, webMercatorUtils, BasemapGallery, Expand) => {
 
-            document.querySelector("#styleCombobox").addEventListener("calciteComboboxChange", (event) => {
-                map.basemap = event.target.value;
-            });
-
-            const map = new Map({
-                basemap: "arcgis-topographic"
-            });
-
+            const map = new Map({ basemap: "arcgis-imagery" });
             const graphicsLayer = new GraphicsLayer();
             map.add(graphicsLayer);
 
@@ -123,20 +140,47 @@ async function initMap() {
                 view.container.style.cursor = graphic ? "pointer" : "default";
             });
 
-            let popupInfo = null;
-            view.popupEnabled = false;
-
             view.on("click", async (event) => {
                 if (!popupInfo) return;
+
                 const response = await view.hitTest(event);
                 const graphic = response.results.find(r => r.graphic.layer === graphicsLayer);
-                if (graphic) {
-                    view.openPopup(popupInfo);
+
+                if (graphic && popupInfo) {
+                    if (currentPopupContainer) {
+                        currentPopupContainer.remove();
+                    }
+
+                    const popupContainer = document.createElement("div");
+                    const isDayTime = popupInfo.isDayTime;
+                    const themeClass = isDayTime ? 'day-theme' : 'night-theme';
+                    popupContainer.className = `custom-popup-container ${themeClass}`;
+                    popupContainer.innerHTML = `
+                        <h2>${popupInfo.title}</h2>
+                        <div class="popup-content">${popupInfo.content}</div>
+                        <span class="popup-close">×</span>
+                    `;
+
+                    document.body.appendChild(popupContainer);
+                    currentPopupContainer = popupContainer;
+
+                    popupContainer.querySelector('.popup-close').addEventListener('click', () => {
+                        popupContainer.remove();
+                        currentPopupContainer = null;
+                    });
                 }
             });
 
-            const searchForm = document.querySelector(".the-search-places");
+            let basemapGallery = new BasemapGallery({ view: view });
+            const basemapGalleryExpand = new Expand({
+                view: view,
+                content: basemapGallery,
+                expandIcon: "basemap"
+            });
 
+            view.ui.add(basemapGalleryExpand, { position: "bottom-right" });
+
+            const searchForm = document.querySelector(".the-search-places");
             searchForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const input = document.getElementById("searchBoundarie");
@@ -145,14 +189,13 @@ async function initMap() {
 
                 try {
                     graphicsLayer.removeAll();
-                    view.closePopup();
+                    if (currentPopupContainer) {
+                        currentPopupContainer.remove();
+                        currentPopupContainer = null;
+                    }
                     popupInfo = null;
 
-                    const existingSuggestions = document.querySelectorAll('.name-suggestion');
-                    existingSuggestions.forEach(el => el.remove());
-
                     const placeData = await fetchAPI('geocode', { text: cityName });
-
                     if (!placeData.features || placeData.features.length === 0) {
                         throw new Error("Boundaries not found");
                     }
@@ -163,18 +206,12 @@ async function initMap() {
                     const isCity = !['country', 'state', 'region'].includes(placeType);
 
                     const boundaryData = await fetchAPI('place-details', { id: placeId });
-
-                    if (!boundaryData.features) {
-                        throw new Error("No boundary features found");
-                    }
+                    if (!boundaryData.features) throw new Error("No boundary features found");
 
                     const boundaryFeature = boundaryData.features.find(f => f.properties.feature_type === 'details');
-                    if (!boundaryFeature) {
-                        throw new Error("Boundaries not available");
-                    }
+                    if (!boundaryFeature) throw new Error("Boundaries not available");
 
                     const geojson = boundaryFeature.geometry;
-
                     if (geojson && geojson.coordinates) {
                         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
@@ -193,46 +230,27 @@ async function initMap() {
                         };
 
                         processCoordinates(geojson.coordinates);
-
                         const geographicExtent = new Extent({
-                            xmin: minX,
-                            ymin: minY,
-                            xmax: maxX,
-                            ymax: maxY,
+                            xmin: minX, ymin: minY, xmax: maxX, ymax: maxY,
                             spatialReference: { wkid: 4326 }
                         });
 
                         const mercatorExtent = webMercatorUtils.geographicToWebMercator(geographicExtent);
-
-                        const rings = geojson.type === "Polygon"
-                            ? geojson.coordinates
-                            : geojson.coordinates.flat();
+                        const rings = geojson.type === "Polygon" ? geojson.coordinates : geojson.coordinates.flat();
 
                         rings.forEach(ring => {
                             const polygonGraphic = new Graphic({
-                                geometry: {
-                                    type: "polygon",
-                                    rings: ring,
-                                    spatialReference: { wkid: 4326 }
-                                },
+                                geometry: { type: "polygon", rings: ring, spatialReference: { wkid: 4326 } },
                                 symbol: {
                                     type: "simple-fill",
                                     color: [100, 149, 237, 0.2],
-                                    outline: {
-                                        color: [62, 59, 227, 0.7],
-                                        width: 2
-                                    }
+                                    outline: { color: [62, 59, 227, 0.7], width: 2 }
                                 }
                             });
                             graphicsLayer.add(polygonGraphic);
                         });
 
-                        await view.goTo({
-                            target: mercatorExtent,
-                        }, {
-                            duration: 2000,
-                            easing: "ease-in-out"
-                        });
+                        await view.goTo({ target: mercatorExtent }, { duration: 2000, easing: "ease-in-out" });
 
                         if (isCity) {
                             const centerLong = (minX + maxX) / 2;
@@ -241,15 +259,9 @@ async function initMap() {
 
                             let weatherData;
                             try {
-                                const locationData = await fetchAPI('weather/location', {
-                                    lat: centerLat,
-                                    lon: centerLong
-                                });
-
+                                const locationData = await fetchAPI('weather/location', { lat: centerLat, lon: centerLong });
                                 if (locationData && locationData.Key) {
-                                    weatherData = await fetchAPI('weather/conditions', {
-                                        key: locationData.Key
-                                    });
+                                    weatherData = await fetchAPI('weather/conditions', { key: locationData.Key });
                                 } else {
                                     throw new Error("No location found by coordinates");
                                 }
@@ -260,26 +272,64 @@ async function initMap() {
                                 weatherData = await fetchAPI('weather/conditions', { key: cityData[0].Key });
                             }
 
+                            const isDayTime = weatherData[0]?.IsDayTime ?? true;
+                            const weatherIcon = getWeatherIcon(
+                                weatherData[0]?.WeatherText ?? "Clear",
+                                isDayTime
+                            );
+                            const tempIcon = getTemperatureIcon(weatherData[0]?.Temperature?.Metric?.Value ?? "N/A");
+                            const humidityIcon = getHumidityIcon(weatherData[0]?.RelativeHumidity ?? "N/A");
+
                             const popupContent = `
-                                Latitude: ${centerLat.toFixed(4)} <br>
-                                Longitude: ${centerLong.toFixed(4)} <br>
-                                Cloud cover: ${weatherData[0]?.CloudCover ?? "N/A"}%<br>
-                                Temperature: ${weatherData[0]?.Temperature?.Metric?.Value ?? "N/A"}°C<br>
-                                Humidity: ${weatherData[0]?.RelativeHumidity ?? "N/A"}%<br>
-                                Weather: ${weatherData[0]?.WeatherText ?? "N/A"}<br>
-                                Day or Night? ${weatherData[0]?.IsDayTime ? "Day" : "Night"}
-                            `;
+   <div class="weather-info-item">
+        <i class="fas fa-${isDayTime ? 'clock day-time-icon' : 'clock night-time-icon'}"></i>
+        ${isDayTime ? 'Day Time' : 'Night Time'}
+    </div>
+    <div class="weather-info-item">
+        <i class="${weatherIcon}"></i>
+        ${weatherData[0]?.WeatherText ?? "N/A"} Conditions
+    </div>
+    <div class="weather-info-item">
+        <i class="${tempIcon}"></i>
+        ${weatherData[0]?.Temperature?.Metric?.Value ?? "N/A"}°C
+    </div>
+    <div class="weather-info-item">
+        <i class="${humidityIcon}"></i>
+        ${weatherData[0]?.RelativeHumidity ?? "N/A"}% Humidity
+    </div>
+    <div class="weather-info-item">
+        <i class="fas fa-cloud"></i>
+        ${weatherData[0]?.CloudCover ?? "N/A"}% Cloud cover
+    </div>
+    <div class="weather-info-item">
+        <i class="fas fa-location-dot"></i>
+        ${centerLat.toFixed(4)}, ${centerLong.toFixed(4)}
+    </div>
+`;
 
                             popupInfo = {
                                 title: `${suggestedName[0].toUpperCase()}${suggestedName.slice(1)}`,
                                 content: popupContent,
-                                location: {
-                                    longitude: centerLong,
-                                    latitude: centerLat
-                                }
+                                isDayTime: isDayTime,
+                                weatherIcon: weatherIcon
                             };
 
-                            view.openPopup(popupInfo);
+                            const popupContainer = document.createElement("div");
+                            const themeClass = isDayTime ? 'day-theme' : 'night-theme';
+                            popupContainer.className = `custom-popup-container ${themeClass}`;
+                            popupContainer.innerHTML = `
+                                <h2>${popupInfo.title}</h2>
+                                <div class="popup-content">${popupContent}</div>
+                                <span class="popup-close">×</span>
+                            `;
+
+                            document.body.appendChild(popupContainer);
+                            currentPopupContainer = popupContainer;
+
+                            popupContainer.querySelector('.popup-close').addEventListener('click', () => {
+                                popupContainer.remove();
+                                currentPopupContainer = null;
+                            });
                         }
                     }
                 } catch (error) {
@@ -294,5 +344,4 @@ async function initMap() {
     }
 }
 
-// Initialize the map
 initMap();
