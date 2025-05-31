@@ -287,7 +287,7 @@ async function initMap() {
     </div>
     <div class="weather-info-item">
         <i class="${weatherIcon}"></i>
-        ${weatherData[0]?.WeatherText ?? "N/A"} Conditions
+        ${weatherData[0]?.WeatherText ?? "N/A"} conditions
     </div>
     <div class="weather-info-item">
         <i class="${tempIcon}"></i>
