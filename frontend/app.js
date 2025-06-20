@@ -57,7 +57,7 @@ function getHumidityIcon(humidity) {
 const DEV_MODE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_BASE_URL = DEV_MODE
     ? 'http://localhost:3000'
-    : 'https://search-boundaries.onrender.com';;
+    : 'https://search-boundaries.onrender.com';
 
 async function fetchAPI(endpoint, params = {}) {
     const url = new URL(`${API_BASE_URL}/api/${endpoint}`);
@@ -68,7 +68,6 @@ async function fetchAPI(endpoint, params = {}) {
     try {
         const response = await fetch(url, {
             mode: 'cors',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
