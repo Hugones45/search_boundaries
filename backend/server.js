@@ -8,13 +8,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Enhanced CORS configuration
 const allowedOrigins = [
-    'http://localhost:5501',
     'http://127.0.0.1:5501',
-
-    'https://search-boundaries.onrender.com',
-
-    'https://search-world-boundaries.vercel.app'
+    'http://localhost:5501',
+    'https://search-boundaries.onrender.com'
 ];
 
 // First CORS layer - middleware
