@@ -88,30 +88,21 @@ let view;
 let currentPopupContainer = null;
 let popupInfo = null;
 
-async function loadArcGISConfig(retries = 3, delay = 3000) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/arcgis-config`);
-            if (response.ok) {
-                const data = await response.json();
-                return data.apiKey;
-            }
+async function loadArcGISConfig() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/arcgis-config`);
+        if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
-        } catch (error) {
-            console.warn(`Attempt ${i + 1} failed:`, error.message);
-            if (i < retries - 1) {
-                await new Promise(res => setTimeout(res, delay)); // wait before retry
-            } else {
-                console.error('Failed to load ArcGIS config after retries:', error);
-                throw error;
-            }
         }
+        return (await response.json()).apiKey;
+    } catch (error) {
+        console.error('Failed to load ArcGIS config:', error);
+        throw error;
     }
 }
 
 async function initMap() {
     try {
-        // This will retry fetching API key up to 3 times with delay, waking backend if needed
         const apiKey = await loadArcGISConfig();
 
         await new Promise((resolve) => {
