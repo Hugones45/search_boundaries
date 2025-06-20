@@ -68,6 +68,7 @@ async function fetchAPI(endpoint, params = {}) {
     try {
         const response = await fetch(url, {
             mode: 'cors',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
