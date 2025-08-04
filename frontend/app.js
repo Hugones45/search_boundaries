@@ -102,8 +102,13 @@ async function loadArcGISConfig() {
 }
 
 async function initMap() {
+
+    document.getElementById("loading-backend").style.display = "flex";
+
     try {
         const apiKey = await loadArcGISConfig();
+
+        document.getElementById("loading-backend").style.display = "none";
 
         await new Promise((resolve) => {
             require(["esri/config"], (esriConfig) => {
@@ -340,7 +345,11 @@ async function initMap() {
         });
     } catch (error) {
         console.error('Failed to initialize map:', error);
-        alert('Failed to initialize the map. Please try again later.');
+        document.getElementById("loading-backend").innerHTML = `
+        <div class="loading-text">
+            <i class="fas fa-triangle-exclamation"></i>
+            Failed to connect to server. Please try again later.
+        </div>`;
     }
 }
 
