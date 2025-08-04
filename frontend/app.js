@@ -105,8 +105,20 @@ async function initMap() {
 
     document.getElementById("loading-backend").style.display = "flex";
 
+    let secondsElapsed = 0;
+    const timerElement = document.getElementById("wake-timer");
+    timerElement.textContent = `Elapsed time: 0s`;
+
+    const timerInterval = setInterval(() => {
+        secondsElapsed++;
+        timerElement.textContent = `Elapsed time: ${secondsElapsed}s`;
+    }, 1000);
+
+
     try {
         const apiKey = await loadArcGISConfig();
+
+        clearInterval(timerInterval);
 
         document.getElementById("loading-backend").style.display = "none";
 
