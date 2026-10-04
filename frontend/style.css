@@ -137,7 +137,7 @@ body {
 .custom-popup-container {
     position: absolute;
     top: 180px;
-    left: 20px;
+    right: 20px;
     padding: 20px;
     border-radius: 12px;
     width: 280px;

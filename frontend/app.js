@@ -15,24 +15,38 @@ popupWapper.addEventListener('click', e => {
     }
 });
 
-// Improved weather icon function
-function getWeatherIcon(weatherText, isDayTime) {
-    const weather = weatherText.toLowerCase();
+// Weather icon — adapted for OpenWeather "main" + "description" values
+function getWeatherIcon(weatherMain, weatherDescription, isDayTime) {
+    const main = (weatherMain || '').toLowerCase();
+    const desc = (weatherDescription || '').toLowerCase();
 
-    if (weather.includes('sunny') || weather.includes('clear')) {
+    if (main.includes('clear')) {
         return isDayTime ? 'fas fa-sun weather-sun' : 'fas fa-moon weather-moon';
-    } else if (weather.includes('partly cloudy')) {
-        return isDayTime ? 'fas fa-cloud-sun' : 'fas fa-cloud-moon';
-    } else if (weather.includes('cloud')) {
+    }
+    if (main.includes('cloud')) {
+        if (desc.includes('few') || desc.includes('scattered')) {
+            return isDayTime ? 'fas fa-cloud-sun' : 'fas fa-cloud-moon';
+        }
         return 'fas fa-cloud';
-    } else if (weather.includes('rain')) {
+    }
+    if (main.includes('rain') || main.includes('drizzle')) {
         return 'fas fa-cloud-rain';
-    } else if (weather.includes('snow')) {
+    }
+    if (main.includes('snow')) {
         return 'fas fa-snowflake';
-    } else if (weather.includes('thunder') || weather.includes('storm')) {
+    }
+    if (main.includes('thunder')) {
         return 'fas fa-bolt';
-    } else if (weather.includes('fog') || weather.includes('haze')) {
+    }
+    if (
+        main.includes('mist') || main.includes('fog') || main.includes('haze') ||
+        main.includes('smoke') || main.includes('dust') || main.includes('sand') ||
+        main.includes('ash')
+    ) {
         return 'fas fa-smog';
+    }
+    if (main.includes('squall') || main.includes('tornado')) {
+        return 'fas fa-wind';
     }
     return isDayTime ? 'fas fa-sun weather-sun' : 'fas fa-moon weather-moon';
 }
@@ -114,12 +128,10 @@ async function initMap() {
         timerElement.textContent = `Elapsed time: ${secondsElapsed}s`;
     }, 1000);
 
-
     try {
         const apiKey = await loadArcGISConfig();
 
         clearInterval(timerInterval);
-
         document.getElementById("loading-backend").style.display = "none";
 
         await new Promise((resolve) => {
@@ -276,47 +288,71 @@ async function initMap() {
 
                             let weatherData;
                             try {
-                                const locationData = await fetchAPI('weather/location', { lat: centerLat, lon: centerLong });
-                                if (locationData && locationData.Key) {
-                                    weatherData = await fetchAPI('weather/conditions', { key: locationData.Key });
-                                } else {
-                                    throw new Error("No location found by coordinates");
+                                // Try OpenWeather directly with coordinates
+                                weatherData = await fetchAPI('weather/conditions', {
+                                    lat: centerLat,
+                                    lon: centerLong
+                                });
+                                if (!weatherData || !weatherData.main) {
+                                    throw new Error("Weather not available by coordinates");
                                 }
                             } catch (coordError) {
+                                // Fallback: get coordinates by city name via Geocoding
                                 console.log("Falling back to name-based search:", coordError.message);
                                 const cityData = await fetchAPI('weather/city', { q: suggestedName });
-                                if (!cityData || cityData.length === 0) throw new Error("City not found");
-                                weatherData = await fetchAPI('weather/conditions', { key: cityData[0].Key });
+
+                                // --- FIX START ---
+                                // Check if cityData is actually an array. If OpenWeather returns an error,
+                                // it sends back an object, which causes cityData[0] to be undefined.
+                                if (!Array.isArray(cityData) || cityData.length === 0) {
+                                    console.error("Invalid cityData received from backend:", cityData);
+                                    throw new Error("City not found or OpenWeather API error");
+                                }
+                                // --- FIX END ---
+
+                                const { lat, lon } = cityData[0];
+                                weatherData = await fetchAPI('weather/conditions', { lat, lon });
+                                if (!weatherData || !weatherData.main) {
+                                    throw new Error("Weather not available for this city");
+                                }
                             }
 
-                            const isDayTime = weatherData[0]?.IsDayTime ?? true;
-                            const weatherIcon = getWeatherIcon(
-                                weatherData[0]?.WeatherText ?? "Clear",
-                                isDayTime
-                            );
-                            const tempIcon = getTemperatureIcon(weatherData[0]?.Temperature?.Metric?.Value ?? "N/A");
-                            const humidityIcon = getHumidityIcon(weatherData[0]?.RelativeHumidity ?? "N/A");
+                            // Day/Night detection from sunrise / sunset (unix, UTC)
+                            const now = weatherData.dt;
+                            const sunrise = weatherData.sys?.sunrise ?? 0;
+                            const sunset = weatherData.sys?.sunset ?? 0;
+                            const isDayTime = now >= sunrise && now < sunset;
+
+                            const weatherMain = weatherData.weather?.[0]?.main ?? "Clear";
+                            const weatherDesc = weatherData.weather?.[0]?.description ?? "clear sky";
+                            const temperature = weatherData.main?.temp ?? "N/A";
+                            const humidity = weatherData.main?.humidity ?? "N/A";
+                            const cloudCover = weatherData.clouds?.all ?? "N/A";
+
+                            const weatherIcon = getWeatherIcon(weatherMain, weatherDesc, isDayTime);
+                            const tempIcon = getTemperatureIcon(temperature);
+                            const humidityIcon = getHumidityIcon(humidity);
 
                             const popupContent = `
-   <div class="weather-info-item">
+    <div class="weather-info-item">
         <i class="fas fa-${isDayTime ? 'clock day-time-icon' : 'clock night-time-icon'}"></i>
         ${isDayTime ? 'Day Time' : 'Night Time'}
     </div>
     <div class="weather-info-item">
         <i class="${weatherIcon}"></i>
-        ${weatherData[0]?.WeatherText ?? "N/A"} conditions
+        ${weatherDesc} conditions
     </div>
     <div class="weather-info-item">
         <i class="${tempIcon}"></i>
-        ${weatherData[0]?.Temperature?.Metric?.Value ?? "N/A"}°C
+        ${temperature}°C
     </div>
     <div class="weather-info-item">
         <i class="${humidityIcon}"></i>
-        ${weatherData[0]?.RelativeHumidity ?? "N/A"}% Humidity
+        ${humidity}% Humidity
     </div>
     <div class="weather-info-item">
         <i class="fas fa-cloud"></i>
-        ${weatherData[0]?.CloudCover ?? "N/A"}% Cloud cover
+        ${cloudCover}% Cloud cover
     </div>
     <div class="weather-info-item">
         <i class="fas fa-location-dot"></i>
