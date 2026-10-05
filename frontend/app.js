@@ -102,6 +102,22 @@ let view;
 let currentPopupContainer = null;
 let popupInfo = null;
 
+/* ------------------------------------------------------------------
+   SEARCH LOADER CONTROLS
+   ------------------------------------------------------------------ */
+const searchLoader = document.getElementById("search-loader");
+let isSearching = false; // guards against duplicate submissions
+
+function showSearchLoader() {
+    searchLoader.classList.add("visible");
+    searchLoader.setAttribute("aria-hidden", "false");
+}
+
+function hideSearchLoader() {
+    searchLoader.classList.remove("visible");
+    searchLoader.setAttribute("aria-hidden", "true");
+}
+
 async function loadArcGISConfig() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/arcgis-config`);
@@ -212,9 +228,28 @@ async function initMap() {
             const searchForm = document.querySelector(".the-search-places");
             searchForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
+
+                // ---- Duplicate-submission guard ----
+                if (isSearching) {
+                    console.log("Search already in progress — ignoring click.");
+                    return;
+                }
+
                 const input = document.getElementById("searchBoundarie");
                 const cityName = input.value.trim();
                 if (!cityName) return;
+
+                isSearching = true;
+                showSearchLoader();
+
+                // Helper so we always hide the loader, no matter what path we exit by
+                let loaderHidden = false;
+                const hideLoaderOnce = () => {
+                    if (!loaderHidden) {
+                        loaderHidden = true;
+                        hideSearchLoader();
+                    }
+                };
 
                 try {
                     graphicsLayer.removeAll();
@@ -279,6 +314,14 @@ async function initMap() {
                             graphicsLayer.add(polygonGraphic);
                         });
 
+                        // ============================================================
+                        // Hide the loader right before the zoom animation starts.
+                        // This is exactly what the user requested:
+                        // the "bichinho" disappears when the zoom begins.
+                        // ============================================================
+                        hideLoaderOnce();
+                        isSearching = false;
+
                         await view.goTo({ target: mercatorExtent }, { duration: 2000, easing: "ease-in-out" });
 
                         if (isCity) {
@@ -301,14 +344,12 @@ async function initMap() {
                                 console.log("Falling back to name-based search:", coordError.message);
                                 const cityData = await fetchAPI('weather/city', { q: suggestedName });
 
-                                // --- FIX START ---
                                 // Check if cityData is actually an array. If OpenWeather returns an error,
                                 // it sends back an object, which causes cityData[0] to be undefined.
                                 if (!Array.isArray(cityData) || cityData.length === 0) {
                                     console.error("Invalid cityData received from backend:", cityData);
                                     throw new Error("City not found or OpenWeather API error");
                                 }
-                                // --- FIX END ---
 
                                 const { lat, lon } = cityData[0];
                                 weatherData = await fetchAPI('weather/conditions', { lat, lon });
@@ -387,7 +428,12 @@ async function initMap() {
                     }
                 } catch (error) {
                     console.error("Search error:", error);
+                    hideLoaderOnce();
                     alert("Error: " + error.message);
+                } finally {
+                    // Safety net: always release the guard and hide the loader
+                    hideLoaderOnce();
+                    isSearching = false;
                 }
             });
         });
