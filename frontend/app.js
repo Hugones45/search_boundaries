@@ -314,10 +314,18 @@ async function initMap() {
                             graphicsLayer.add(polygonGraphic);
                         });
 
+                        // FIX: use Geoapify's real place coordinates, not the bbox midpoint. 
+
+                        const placeLat = Number(placeProperties.lat);
+                        const placeLon = Number(placeProperties.lon);
+
+                        // Fallback to bbox midpoint ONLY if Geoapify didn't return coords
+                        const hasPlaceCoords = Number.isFinite(placeLat) && Number.isFinite(placeLon);
+                        const weatherLat = hasPlaceCoords ? placeLat : (minY + maxY) / 2;
+                        const weatherLon = hasPlaceCoords ? placeLon : (minX + maxX) / 2;
+
                         // ============================================================
                         // Hide the loader right before the zoom animation starts.
-                        // This is exactly what the user requested:
-                        // the "bichinho" disappears when the zoom begins.
                         // ============================================================
                         hideLoaderOnce();
                         isSearching = false;
@@ -325,16 +333,14 @@ async function initMap() {
                         await view.goTo({ target: mercatorExtent }, { duration: 2000, easing: "ease-in-out" });
 
                         if (isCity) {
-                            const centerLong = (minX + maxX) / 2;
-                            const centerLat = (minY + maxY) / 2;
                             const suggestedName = placeProperties.city || placeProperties.name;
 
                             let weatherData;
                             try {
-                                // Try OpenWeather directly with coordinates
+                                // Primary: OpenWeather directly with the place's real coordinates
                                 weatherData = await fetchAPI('weather/conditions', {
-                                    lat: centerLat,
-                                    lon: centerLong
+                                    lat: weatherLat,
+                                    lon: weatherLon
                                 });
                                 if (!weatherData || !weatherData.main) {
                                     throw new Error("Weather not available by coordinates");
@@ -344,8 +350,6 @@ async function initMap() {
                                 console.log("Falling back to name-based search:", coordError.message);
                                 const cityData = await fetchAPI('weather/city', { q: suggestedName });
 
-                                // Check if cityData is actually an array. If OpenWeather returns an error,
-                                // it sends back an object, which causes cityData[0] to be undefined.
                                 if (!Array.isArray(cityData) || cityData.length === 0) {
                                     console.error("Invalid cityData received from backend:", cityData);
                                     throw new Error("City not found or OpenWeather API error");
@@ -374,6 +378,10 @@ async function initMap() {
                             const tempIcon = getTemperatureIcon(temperature);
                             const humidityIcon = getHumidityIcon(humidity);
 
+                            // Display the coordinates actually used for weather
+                            const displayedLat = weatherData.coord?.lat ?? weatherLat;
+                            const displayedLon = weatherData.coord?.lon ?? weatherLon;
+
                             const popupContent = `
     <div class="weather-info-item">
         <i class="fas fa-${isDayTime ? 'clock day-time-icon' : 'clock night-time-icon'}"></i>
@@ -397,7 +405,7 @@ async function initMap() {
     </div>
     <div class="weather-info-item">
         <i class="fas fa-location-dot"></i>
-        ${centerLat.toFixed(4)}, ${centerLong.toFixed(4)}
+        ${Number(displayedLat).toFixed(4)}, ${Number(displayedLon).toFixed(4)}
     </div>
 `;
 
