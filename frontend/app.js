@@ -163,10 +163,8 @@ async function initMap() {
             "esri/Graphic",
             "esri/layers/GraphicsLayer",
             "esri/geometry/Extent",
-            "esri/geometry/support/webMercatorUtils",
-            "esri/widgets/BasemapGallery",
-            "esri/widgets/Expand"
-        ], (Map, MapView, Graphic, GraphicsLayer, Extent, webMercatorUtils, BasemapGallery, Expand) => {
+            "esri/geometry/support/webMercatorUtils"
+        ], (Map, MapView, Graphic, GraphicsLayer, Extent, webMercatorUtils) => {
 
             const map = new Map({ basemap: "arcgis-imagery" });
             const graphicsLayer = new GraphicsLayer();
@@ -215,15 +213,6 @@ async function initMap() {
                     });
                 }
             });
-
-            let basemapGallery = new BasemapGallery({ view: view });
-            const basemapGalleryExpand = new Expand({
-                view: view,
-                content: basemapGallery,
-                expandIcon: "basemap"
-            });
-
-            view.ui.add(basemapGalleryExpand, { position: "bottom-right" });
 
             const searchForm = document.querySelector(".the-search-places");
             searchForm.addEventListener("submit", async (e) => {
@@ -314,19 +303,13 @@ async function initMap() {
                             graphicsLayer.add(polygonGraphic);
                         });
 
-                        // FIX: use Geoapify's real place coordinates, not the bbox midpoint. 
-
                         const placeLat = Number(placeProperties.lat);
                         const placeLon = Number(placeProperties.lon);
 
-                        // Fallback to bbox midpoint ONLY if Geoapify didn't return coords
                         const hasPlaceCoords = Number.isFinite(placeLat) && Number.isFinite(placeLon);
                         const weatherLat = hasPlaceCoords ? placeLat : (minY + maxY) / 2;
                         const weatherLon = hasPlaceCoords ? placeLon : (minX + maxX) / 2;
 
-                        // ============================================================
-                        // Hide the loader right before the zoom animation starts.
-                        // ============================================================
                         hideLoaderOnce();
                         isSearching = false;
 
@@ -337,7 +320,6 @@ async function initMap() {
 
                             let weatherData;
                             try {
-                                // Primary: OpenWeather directly with the place's real coordinates
                                 weatherData = await fetchAPI('weather/conditions', {
                                     lat: weatherLat,
                                     lon: weatherLon
@@ -346,7 +328,6 @@ async function initMap() {
                                     throw new Error("Weather not available by coordinates");
                                 }
                             } catch (coordError) {
-                                // Fallback: get coordinates by city name via Geocoding
                                 console.log("Falling back to name-based search:", coordError.message);
                                 const cityData = await fetchAPI('weather/city', { q: suggestedName });
 
@@ -362,7 +343,6 @@ async function initMap() {
                                 }
                             }
 
-                            // Day/Night detection from sunrise / sunset (unix, UTC)
                             const now = weatherData.dt;
                             const sunrise = weatherData.sys?.sunrise ?? 0;
                             const sunset = weatherData.sys?.sunset ?? 0;
@@ -378,7 +358,6 @@ async function initMap() {
                             const tempIcon = getTemperatureIcon(temperature);
                             const humidityIcon = getHumidityIcon(humidity);
 
-                            // Display the coordinates actually used for weather
                             const displayedLat = weatherData.coord?.lat ?? weatherLat;
                             const displayedLon = weatherData.coord?.lon ?? weatherLon;
 
@@ -439,7 +418,6 @@ async function initMap() {
                     hideLoaderOnce();
                     alert("Error: " + error.message);
                 } finally {
-                    // Safety net: always release the guard and hide the loader
                     hideLoaderOnce();
                     isSearching = false;
                 }
